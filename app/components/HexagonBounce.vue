@@ -8,7 +8,8 @@
     />
     <div class="controls">
       <div class="control-group">
-        <label>重力: {{ physics.config.gravity.toFixed(2) }}</label>
+        <label>重力</label>
+        <div class="value-display">{{ physics.config.gravity.toFixed(2) }}</div>
         <input
           v-model.number="physics.config.gravity"
           type="range"
@@ -18,7 +19,8 @@
         />
       </div>
       <div class="control-group">
-        <label>弹性: {{ physics.config.bounce.toFixed(2) }}</label>
+        <label>弹性</label>
+        <div class="value-display">{{ physics.config.bounce.toFixed(2) }}</div>
         <input
           v-model.number="physics.config.bounce"
           type="range"
@@ -28,7 +30,8 @@
         />
       </div>
       <div class="control-group">
-        <label>摩擦: {{ physics.config.friction.toFixed(2) }}</label>
+        <label>摩擦</label>
+        <div class="value-display">{{ physics.config.friction.toFixed(2) }}</div>
         <input
           v-model.number="physics.config.friction"
           type="range"
@@ -38,7 +41,8 @@
         />
       </div>
       <div class="control-group">
-        <label>旋转速度: {{ rotationSpeed.toFixed(3) }}</label>
+        <label>旋转速度</label>
+        <div class="value-display">{{ rotationSpeed.toFixed(3) }}</div>
         <input
           v-model.number="rotationSpeed"
           type="range"
@@ -93,12 +97,34 @@ function resetBall(): void {
  * 绘制六边形
  */
 function drawHexagon(ctx: CanvasRenderingContext2D, vertices: Vector2[]): void {
-  ctx.strokeStyle = '#4a90e2'
-  ctx.lineWidth = 4
+  // 绘制六边形填充（半透明）
+  const gradient = ctx.createRadialGradient(
+    canvasSize / 2, canvasSize / 2, 0,
+    canvasSize / 2, canvasSize / 2, hexagonRadius
+  )
+  gradient.addColorStop(0, 'rgba(79, 70, 229, 0.15)')
+  gradient.addColorStop(0.7, 'rgba(124, 58, 237, 0.1)')
+  gradient.addColorStop(1, 'rgba(236, 72, 153, 0.05)')
+
+  ctx.fillStyle = gradient
+  ctx.beginPath()
+  ctx.moveTo(vertices[0].x, vertices[0].y)
+  for (let i = 1; i < vertices.length; i++) {
+    ctx.lineTo(vertices[i].x, vertices[i].y)
+  }
+  ctx.closePath()
+  ctx.fill()
+
+  // 绘制六边形边框发光效果
+  ctx.strokeStyle = '#4f46e5'
+  ctx.lineWidth = 3
   ctx.lineCap = 'round'
   ctx.lineJoin = 'round'
+  ctx.shadowColor = '#4f46e5'
+  ctx.shadowBlur = 10
+  ctx.shadowOffsetX = 0
+  ctx.shadowOffsetY = 0
 
-  // 绘制六边形边框
   ctx.beginPath()
   ctx.moveTo(vertices[0].x, vertices[0].y)
   for (let i = 1; i < vertices.length; i++) {
@@ -107,24 +133,35 @@ function drawHexagon(ctx: CanvasRenderingContext2D, vertices: Vector2[]): void {
   ctx.closePath()
   ctx.stroke()
 
-  // 绘制六边形填充（半透明）
-  const gradient = ctx.createRadialGradient(
-    canvasSize / 2, canvasSize / 2, 0,
-    canvasSize / 2, canvasSize / 2, hexagonRadius
-  )
-  gradient.addColorStop(0, 'rgba(74, 144, 226, 0.1)')
-  gradient.addColorStop(1, 'rgba(74, 144, 226, 0.05)')
-
-  ctx.fillStyle = gradient
-  ctx.fill()
+  // 重置阴影
+  ctx.shadowColor = 'transparent'
+  ctx.shadowBlur = 0
 
   // 绘制顶点
-  ctx.fillStyle = '#e74c3c'
-  for (const vertex of vertices) {
+  for (let i = 0; i < vertices.length; i++) {
+    const vertex = vertices[i]
+    
+    // 顶点发光效果
+    ctx.shadowColor = '#ec4899'
+    ctx.shadowBlur = 8
+    
+    // 外圈
+    ctx.fillStyle = '#ec4899'
     ctx.beginPath()
-    ctx.arc(vertex.x, vertex.y, 6, 0, Math.PI * 2)
+    ctx.arc(vertex.x, vertex.y, 8, 0, Math.PI * 2)
+    ctx.fill()
+    
+    // 内圈
+    ctx.shadowBlur = 0
+    ctx.fillStyle = '#fbbf24'
+    ctx.beginPath()
+    ctx.arc(vertex.x, vertex.y, 4, 0, Math.PI * 2)
     ctx.fill()
   }
+  
+  // 重置阴影
+  ctx.shadowColor = 'transparent'
+  ctx.shadowBlur = 0
 }
 
 /**
@@ -133,20 +170,21 @@ function drawHexagon(ctx: CanvasRenderingContext2D, vertices: Vector2[]): void {
 function drawBall(ctx: CanvasRenderingContext2D, ballData: Ball): void {
   const { position, radius } = ballData
 
-  // 球的阴影
-  ctx.shadowColor = 'rgba(0, 0, 0, 0.3)'
-  ctx.shadowBlur = 10
-  ctx.shadowOffsetX = 2
-  ctx.shadowOffsetY = 2
+  // 球的外发光效果
+  ctx.shadowColor = '#fbbf24'
+  ctx.shadowBlur = 20
+  ctx.shadowOffsetX = 0
+  ctx.shadowOffsetY = 0
 
-  // 球的渐变
+  // 球的渐变 - 更动态的颜色
   const gradient = ctx.createRadialGradient(
     position.x - radius * 0.3, position.y - radius * 0.3, 0,
     position.x, position.y, radius
   )
-  gradient.addColorStop(0, '#ff6b6b')
-  gradient.addColorStop(0.7, '#e74c3c')
-  gradient.addColorStop(1, '#c0392b')
+  gradient.addColorStop(0, '#fbbf24')
+  gradient.addColorStop(0.3, '#f59e0b')
+  gradient.addColorStop(0.7, '#d97706')
+  gradient.addColorStop(1, '#92400e')
 
   ctx.fillStyle = gradient
   ctx.beginPath()
@@ -156,13 +194,17 @@ function drawBall(ctx: CanvasRenderingContext2D, ballData: Ball): void {
   // 重置阴影
   ctx.shadowColor = 'transparent'
   ctx.shadowBlur = 0
-  ctx.shadowOffsetX = 0
-  ctx.shadowOffsetY = 0
 
-  // 球的高光
+  // 球的主要高光
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.6)'
+  ctx.beginPath()
+  ctx.arc(position.x - radius * 0.4, position.y - radius * 0.4, radius * 0.25, 0, Math.PI * 2)
+  ctx.fill()
+
+  // 次要高光
   ctx.fillStyle = 'rgba(255, 255, 255, 0.3)'
   ctx.beginPath()
-  ctx.arc(position.x - radius * 0.3, position.y - radius * 0.3, radius * 0.3, 0, Math.PI * 2)
+  ctx.arc(position.x + radius * 0.2, position.y - radius * 0.1, radius * 0.1, 0, Math.PI * 2)
   ctx.fill()
 }
 
@@ -171,10 +213,15 @@ function drawBall(ctx: CanvasRenderingContext2D, ballData: Ball): void {
  */
 function drawVelocityVector(ctx: CanvasRenderingContext2D, ballData: Ball): void {
   const { position, velocity } = ballData
-  const scale = 10
+  const scale = 15
 
-  ctx.strokeStyle = '#f39c12'
-  ctx.lineWidth = 2
+  // 向量发光效果
+  ctx.shadowColor = '#10b981'
+  ctx.shadowBlur = 8
+  
+  ctx.strokeStyle = '#10b981'
+  ctx.lineWidth = 3
+  ctx.lineCap = 'round'
   ctx.beginPath()
   ctx.moveTo(position.x, position.y)
   ctx.lineTo(position.x + velocity.x * scale, position.y + velocity.y * scale)
@@ -182,7 +229,9 @@ function drawVelocityVector(ctx: CanvasRenderingContext2D, ballData: Ball): void
 
   // 箭头头部
   const angle = Math.atan2(velocity.y, velocity.x)
-  const headlen = 8
+  const headlen = 12
+  
+  ctx.lineWidth = 2
   ctx.beginPath()
   ctx.moveTo(position.x + velocity.x * scale, position.y + velocity.y * scale)
   ctx.lineTo(
@@ -195,6 +244,10 @@ function drawVelocityVector(ctx: CanvasRenderingContext2D, ballData: Ball): void
     position.y + velocity.y * scale - headlen * Math.sin(angle + Math.PI / 6)
   )
   ctx.stroke()
+  
+  // 重置阴影
+  ctx.shadowColor = 'transparent'
+  ctx.shadowBlur = 0
 }
 
 /**
@@ -218,10 +271,22 @@ function render(currentTime: number): void {
     canvasSize / 2, canvasSize / 2, 0,
     canvasSize / 2, canvasSize / 2, canvasSize / 2
   )
-  bgGradient.addColorStop(0, '#2c3e50')
-  bgGradient.addColorStop(1, '#34495e')
+  bgGradient.addColorStop(0, '#1a1a2e')
+  bgGradient.addColorStop(0.5, '#16213e')
+  bgGradient.addColorStop(1, '#0f172a')
   ctx.fillStyle = bgGradient
   ctx.fillRect(0, 0, canvasSize, canvasSize)
+
+  // 添加星星效果
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.8)'
+  for (let i = 0; i < 50; i++) {
+    const x = (i * 137.5) % canvasSize
+    const y = (i * 73.2) % canvasSize
+    const size = Math.sin(currentTime * 0.001 + i) * 0.5 + 1
+    ctx.beginPath()
+    ctx.arc(x, y, size, 0, Math.PI * 2)
+    ctx.fill()
+  }
 
   // 更新六边形旋转
   hexagonRotation.value += rotationSpeed.value
@@ -283,93 +348,283 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
+  gap: 30px;
   padding: 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #ec4899 100%);
   min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+.hexagon-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 30% 70%, rgba(139, 92, 246, 0.3) 0%, transparent 50%),
+              radial-gradient(circle at 70% 20%, rgba(236, 72, 153, 0.3) 0%, transparent 50%),
+              radial-gradient(circle at 90% 90%, rgba(79, 70, 229, 0.2) 0%, transparent 50%);
+  pointer-events: none;
 }
 
 .hexagon-canvas {
-  border: 2px solid #34495e;
-  border-radius: 10px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-  background: #2c3e50;
+  border: 3px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  background: #1a1a2e;
+  position: relative;
+  z-index: 1;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hexagon-canvas:hover {
+  transform: translateY(-4px);
+  box-shadow: 
+    0 25px 70px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
 .controls {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 15px;
-  align-items: center;
-  background: rgba(255, 255, 255, 0.1);
-  padding: 20px;
-  border-radius: 10px;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 20px;
+  align-items: start;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 24px;
+  border-radius: 20px;
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  position: relative;
+  z-index: 1;
+  max-width: 800px;
+  width: 100%;
 }
 
 .control-group {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 8px;
   align-items: center;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.control-group::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #4f46e5, #7c3aed, #ec4899);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.control-group:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.control-group:hover::before {
+  opacity: 1;
 }
 
 .control-group label {
-  color: white;
-  font-size: 14px;
-  font-weight: 500;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  color: #f8fafc;
+  font-size: 13px;
+  font-weight: 600;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.control-group .value-display {
+  color: #e2e8f0;
+  font-size: 16px;
+  font-weight: 700;
+  font-family: 'Courier New', monospace;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  padding: 4px 12px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  min-width: 60px;
+  text-align: center;
 }
 
 .control-group input[type="range"] {
-  width: 120px;
-  height: 6px;
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 3px;
+  width: 100%;
+  max-width: 140px;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
   outline: none;
   cursor: pointer;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.control-group input[type="range"]:hover {
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .control-group input[type="range"]::-webkit-slider-thumb {
   appearance: none;
-  width: 18px;
-  height: 18px;
-  background: #4a90e2;
+  width: 22px;
+  height: 22px;
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
   border-radius: 50%;
   cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  box-shadow: 
+    0 4px 12px rgba(79, 70, 229, 0.4),
+    0 2px 4px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+}
+
+.control-group input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 
+    0 6px 16px rgba(79, 70, 229, 0.6),
+    0 2px 4px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
 .control-group input[type="range"]::-moz-range-thumb {
-  width: 18px;
-  height: 18px;
-  background: #4a90e2;
+  width: 22px;
+  height: 22px;
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
   border-radius: 50%;
   cursor: pointer;
-  border: none;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 
+    0 4px 12px rgba(79, 70, 229, 0.4),
+    0 2px 4px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+}
+
+.control-group input[type="range"]::-moz-range-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 
+    0 6px 16px rgba(79, 70, 229, 0.6),
+    0 2px 4px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
 .reset-btn {
-  padding: 10px 20px;
-  background: #e74c3c;
+  grid-column: 1 / -1;
+  padding: 14px 28px;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
   color: white;
   border: none;
-  border-radius: 6px;
+  border-radius: 12px;
   cursor: pointer;
-  font-weight: 500;
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+  box-shadow: 
+    0 4px 12px rgba(239, 68, 68, 0.4),
+    0 2px 4px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.reset-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s ease;
 }
 
 .reset-btn:hover {
-  background: #c0392b;
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(231, 76, 60, 0.4);
+  box-shadow: 
+    0 8px 20px rgba(239, 68, 68, 0.5),
+    0 4px 8px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.reset-btn:hover::before {
+  left: 100%;
 }
 
 .reset-btn:active {
   transform: translateY(0);
+  box-shadow: 
+    0 2px 8px rgba(239, 68, 68, 0.3),
+    0 1px 2px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .hexagon-container {
+    padding: 16px;
+    gap: 24px;
+  }
+  
+  .controls {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 16px;
+    padding: 20px;
+  }
+  
+  .control-group {
+    padding: 12px;
+  }
+  
+  .reset-btn {
+    padding: 12px 24px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .controls {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    padding: 16px;
+  }
+  
+  .control-group {
+    padding: 10px;
+  }
+  
+  .control-group label {
+    font-size: 11px;
+  }
+  
+  .value-display {
+    font-size: 14px;
+    padding: 3px 8px;
+  }
 }
 </style>
