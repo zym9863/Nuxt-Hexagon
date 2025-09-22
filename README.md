@@ -1,3 +1,5 @@
+[中文](README.md) | [English](README-EN.md)
+
 # Nuxt Hexagon Playground
 
 ## 项目简介
