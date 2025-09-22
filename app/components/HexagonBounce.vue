@@ -1,5 +1,9 @@
 <template>
   <div class="hexagon-container">
+    <div class="header">
+      <h1 class="title">六边形物理演示</h1>
+      <p class="subtitle">交互式物理引擎 · 重力与碰撞模拟</p>
+    </div>
     <canvas
       ref="canvasRef"
       :width="canvasSize"
@@ -369,6 +373,33 @@ onUnmounted(() => {
   pointer-events: none;
 }
 
+.header {
+  text-align: center;
+  z-index: 1;
+  position: relative;
+}
+
+.title {
+  margin: 0 0 8px 0;
+  font-size: clamp(1.8rem, 4vw, 2.5rem);
+  font-weight: 700;
+  background: linear-gradient(135deg, #ffffff, #e2e8f0);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  letter-spacing: -0.5px;
+}
+
+.subtitle {
+  margin: 0;
+  font-size: clamp(0.9rem, 2vw, 1.1rem);
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 400;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+  letter-spacing: 0.5px;
+}
+
 .hexagon-canvas {
   border: 3px solid rgba(255, 255, 255, 0.2);
   border-radius: 16px;
@@ -588,7 +619,19 @@ onUnmounted(() => {
 @media (max-width: 768px) {
   .hexagon-container {
     padding: 16px;
-    gap: 24px;
+    gap: 20px;
+  }
+  
+  .header {
+    margin-bottom: -10px;
+  }
+  
+  .title {
+    font-size: 1.5rem;
+  }
+  
+  .subtitle {
+    font-size: 0.9rem;
   }
   
   .controls {
@@ -608,6 +651,18 @@ onUnmounted(() => {
 }
 
 @media (max-width: 480px) {
+  .hexagon-container {
+    gap: 16px;
+  }
+  
+  .title {
+    font-size: 1.3rem;
+  }
+  
+  .subtitle {
+    font-size: 0.8rem;
+  }
+  
   .controls {
     grid-template-columns: 1fr 1fr;
     gap: 12px;
